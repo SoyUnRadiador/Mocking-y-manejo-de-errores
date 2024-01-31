@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Carrito de Compras</title>
+</head>
+<body>
+    <h1>Carrito de Compras</h1>
+
+    <ul id="productosCarrito">
+      {{#each user.cart.items}}
+        <li>{{this.productName}} - Cantidad: {{this.quantity}}</li>
+      {{/each}}
+    </ul>
+
+    <a href="/realTimeProducts">
+        <button>Ver Productos en Tiempo Real</button>
+    </a>
+    <a href="./carrito">
+        <button>Ver carrito</button>
+    </a>
+    <a href="/">
+        <button>Volver a la lista estática</button>
+    </a>
+    <a href="/logout">
+        <button>Cerrar sesión</button>
+    </a>
+    <button onclick="createCart()">Crear Carrito</button>
+
+    <script>
+        function createCart() {
+            const accessToken = "user";
+            fetch('http://localhost:8080/api/carts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al crear el carrito');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Carrito creado:', data);
+                alert('Carrito creado!');
+            })
+            .catch(error => {
+                console.error('Error al crear el carrito:', error);
+                alert('Error al crear el carrito');
+            });
+        }
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+    const cartId = '{{cartId}}';
+
+    fetch(`/api/carts/${cartId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error en la respuesta: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(cart => {
+            console.log('Respuesta del servidor:', cart);
+
+            if (cart.Products && cart.Products.length > 0) {
+                const ul = document.getElementById('productosCarrito');
+
+                cart.Products.forEach(producto => {
+                    const li = document.createElement('li');
+                    li.textContent = `${producto.Titulo} - Cantidad: ${producto.Cantidad}`;
+
+                    const form = document.createElement('form');
+                    form.action = `/carrito/${cartId}/delete/${producto._id}`;
+                    form.method = 'POST';
+
+                    const button = document.createElement('button');
+                    button.type = 'submit';
+                    button.textContent = 'Eliminar';
+
+                    form.appendChild(button);
+                    li.appendChild(form);
+                    ul.appendChild(li);
+                });
+            } else {
+                const p = document.createElement('p');
+                p.textContent = 'El carrito está vacío';
+                document.body.appendChild(p);
+            }
+        })
+        .catch(error => console.error('Error al obtener productos del carrito:', error));
+});
+</script>
+</body>
+</html>
+
